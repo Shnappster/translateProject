@@ -19,18 +19,18 @@ class TranslateService implements TranslationServiceInterface
      */
     public function export()
     {
-        $this->createJsonFile();
+//         $this->createJsonFile();
         // retrieve all data and save to html
-        $this->getDatabaseScheme()->each(function ($table) {
-            DB::table($table)->get()->each(function ($item) use ($table) {
-                $this->generateTranslationFile($item, $table);
+        $this->getJsonScheme()->each(function ($scheme) {
+            DB::table($scheme->table)->select($scheme->keys)->get()->each(function ($item) use ($scheme) {
+                $this->generateTranslationFile($item, $scheme->table);
             });
         });
     }
 
     private function createJsonFile()
     {
-        $test = $this->getDatabaseScheme()->map(function ($table) {
+        $all_columns = $this->getDatabaseScheme()->map(function ($table) {
             $item = DB::table($table)->first();
             if (!$item) {
                 return null;
@@ -41,9 +41,17 @@ class TranslateService implements TranslationServiceInterface
         })->filter(function ($it) {
             return !is_null($it);
         });
-        $filename = $this->createFolder(self::JSON_FOLDER);
-        $test = file_put_contents($filename . '/' . 'file.json', json_encode($test));
-        dd($test);
+        $this->createFolder(self::JSON_FOLDER);
+        $filename = self::JSON_FOLDER . '/' . 'all_data' . '.json';
+        Storage::disk('local')->put($filename, $all_columns);
+    }
+
+    private function getJsonScheme()
+    {
+        $filename = self::JSON_FOLDER . '/' . 'all_data' . '.json';
+        $data = file_get_contents(storage_path('app/' . $filename));
+        $json = json_decode($data);
+        return collect($json);
     }
 
     private function generateTranslationFile($item, $table)
