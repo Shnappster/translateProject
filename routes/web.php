@@ -11,4 +11,6 @@
 |
 */
 
-Route::get('/','TranslateController@test');
+Route::get('/', 'TranslateController@main');
+Route::get('/export', 'TranslateController@export');
+Route::get('/import', 'TranslateController@import');
